@@ -11,27 +11,19 @@ pipeline {
         
         stage('Backend Tests') {
             steps {
-                echo 'Running Backend Tests...'
-                dir('Backend') {
-                    // We run a temporary node container directly via shell to bypass the need for the Docker Pipeline plugin
-                    sh 'docker run --rm -v ${WORKSPACE}/Backend:/app -w /app node:20-alpine sh -c "npm install && npm test"'
-                }
-            }
-        }
-
-        stage('Build Docker Images') {
-            steps {
-                echo 'Building Docker Compose Images...'
-                // Using docker-compose to build the frontend and backend images
-                sh 'docker-compose build'
+                echo 'Building Backend Image for Testing...'
+                // We build a self-contained image to avoid Docker-in-Docker volume mounting issues
+                sh 'docker build -t mern-backend-test ./Backend'
+                echo 'Running tests inside isolated container...'
+                sh 'docker run --rm mern-backend-test npm test'
             }
         }
 
         stage('Deploy (Local)') {
             steps {
                 echo 'Deploying application locally using Docker Compose...'
-                // Restarting containers in detached mode with newly built images
-                sh 'docker-compose up -d'
+                // Use the CI-specific compose file that doesn't rely on local volume mounts
+                sh 'docker-compose -f docker-compose.ci.yml up --build -d'
             }
         }
     }
