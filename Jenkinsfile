@@ -23,7 +23,7 @@ pipeline {
             steps {
                 echo 'Deploying application locally using Docker Compose...'
                 // Use the CI-specific compose file that doesn't rely on local volume mounts
-                sh 'docker-compose -f docker-compose.ci.yml up --build -d'
+                sh 'docker compose -f docker-compose.ci.yml up --build -d'
             }
         }
     }
