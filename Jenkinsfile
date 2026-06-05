@@ -10,17 +10,11 @@ pipeline {
         }
         
         stage('Backend Tests') {
-            agent {
-                docker {
-                    image 'node:20-alpine'
-                    args '-u root:root'
-                }
-            }
             steps {
                 echo 'Running Backend Tests...'
                 dir('Backend') {
-                    sh 'npm install'
-                    sh 'npm test'
+                    // We run a temporary node container directly via shell to bypass the need for the Docker Pipeline plugin
+                    sh 'docker run --rm -v ${WORKSPACE}/Backend:/app -w /app node:20-alpine sh -c "npm install && npm test"'
                 }
             }
         }
